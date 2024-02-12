@@ -82,14 +82,16 @@ def main():
 
         media_id = api.media_upload("image.png").media_id_string
 
-        tweet_text = f"Restam {days_left}. Prompt: {prompt_text}"
+        tweet_text = f"Me Restam {days_left} dias de vida. Prompt: {prompt_text}"
 
         if len(tweet_text) > 279:
-            tweet_text = f"Restam {days_left}. Prompt exedeu o limite de caracteres."
+            tweet_text = f"Me Restam {days_left} dias de vida. O prompt desta obra excedeu o limite de caracteres de um post, por esse motivo não será exibido."
 
         client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
 
         os.remove("image.png")
+
+        client_twitter.create_tweet(text="🤖 - Próxima obra a ser pintada já está em andamento...")
 
         print(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
         print("_______________________________________________________________________________")
@@ -99,14 +101,31 @@ def main():
 def generate_random_time():
     return f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}"
 
+def wait_until_next_execution(next_execution_time):
+    current_time = datetime.now().time()
+    scheduled_time = datetime.strptime(next_execution_time, '%H:%M').time()
+
+    time_diff = datetime.combine(datetime.today(), scheduled_time) - datetime.combine(datetime.today(), current_time)
+    time_diff_seconds = time_diff.total_seconds()
+
+    wakeup_time = time_diff_seconds - (5 * 60)
+
+    if wakeup_time > 0:
+        print(f"Script dormindo até perto do horário agendado ({next_execution_time}). Acordará em {wakeup_time/60:.2f} minutos.")
+        time.sleep(wakeup_time)
+
 def schedule_main():
     # next_random_time = generate_random_time()
+    # next_execution_time = f"{next_random_time[:2]}:{next_random_time[3:]}"
     print('__________________________########################__________________________________')
     # print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
-    schedule.every(5).minutes.do(main)
+    schedule.every(2).minutes.do(main)
+
+    # wait_until_next_execution(next_execution_time)
 
 schedule_main()
 
 while True:
     schedule.run_pending()
     time.sleep(30)
+    print('Pensando... 💭')
