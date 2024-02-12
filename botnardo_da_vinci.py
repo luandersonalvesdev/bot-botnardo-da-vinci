@@ -42,8 +42,6 @@ api = tweepy.API(auth)
 
 limit_credits_date = datetime(2024, 5, 10)
 
-initial_date = datetime.now().strftime('%d/%m/%Y')
-
 def main():
     days_left = (limit_credits_date - datetime.now()).days
 
@@ -106,11 +104,16 @@ def generate_random_time():
 
 def schedule_main():
     next_random_time = generate_random_time()
-    tomorrow_day = (datetime.now() + timedelta(days=1)).strftime('%d/%m/%Y')
-    next_execution_date = initial_date if next_random_time > datetime.now().strftime('%H:%M') else tomorrow_day
-    logging.info('__________________________########################__________________________________')
-    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {next_execution_date} 📅")
+    date_now = datetime.now().strftime('%d/%m/%Y')
+    logging.info(f'__________________________ -> {date_now} 📅 <- __________________________________')
+    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑")
     schedule.every().day.at(next_random_time).do(main)
+
+def reschedule_all_jobs():
+    schedule.clear()
+    schedule_main()
+
+schedule.every().day.at('00:00').do(reschedule_all_jobs)
 
 schedule_main()
 
