@@ -7,6 +7,9 @@ import time
 import schedule
 import random
 from datetime import datetime
+import logging
+
+logging.basicConfig(filename='botnardo.log', level=logging.DEBUG)
 
 def read_data_json():
     script_dir = os.path.dirname(__file__)
@@ -42,7 +45,7 @@ limit_credits_date = datetime(2024, 5, 10)
 def main():
     days_left = (limit_credits_date - datetime.now()).days
 
-    print("Botnardo Da Vinci começou a pintar 🖌️...")
+    logging.info("Botnardo Da Vinci começou a pintar 🖌️...")
     try:
         response = client_openia.chat.completions.create(
             model="gpt-3.5-turbo-16k-0613",
@@ -61,7 +64,7 @@ def main():
 
         prompt_text = response.choices[0].message.content
 
-        print(f"🤖 - Já tive minha ideia: {prompt_text}")
+        logging.info(f"🤖 - Já tive minha ideia: {prompt_text}")
 
         image_response = client_openia.images.generate(
             model="dall-e-2",
@@ -73,7 +76,7 @@ def main():
 
         image_url = image_response.data[0].url
 
-        print(f"🤖 - Pintura finalizada! Caso queira ver uma prévia está aqui: {image_url}")
+        logging.info(f"🤖 - Pintura finalizada! Caso queira ver uma prévia está aqui: {image_url}")
 
         image = requests.get(image_url)
 
@@ -91,34 +94,20 @@ def main():
 
         os.remove("image.png")
 
-        print(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
-        print("_______________________________________________________________________________")
+        logging.info(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
+        logging.info("_______________________________________________________________________________")
     except Exception as e:
-        print(e)
+        logging.exception(e)
 
 def generate_random_time():
     return f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}"
 
-def wait_until_next_execution(next_execution_time):
-    current_time = datetime.now().time()
-    scheduled_time = datetime.strptime(next_execution_time, '%H:%M').time()
-
-    time_diff = datetime.combine(datetime.today(), scheduled_time) - datetime.combine(datetime.today(), current_time)
-    time_diff_seconds = time_diff.total_seconds()
-
-    wakeup_time = time_diff_seconds - (5 * 60)
-
-    if wakeup_time > 0:
-        print(f"Script dormindo até perto do horário agendado ({next_execution_time}). Acordará em {wakeup_time/60:.2f} minutos.")
-        time.sleep(wakeup_time)
-
 def schedule_main():
     next_random_time = generate_random_time()
     next_execution_time = f"{next_random_time[:2]}:{next_random_time[3:]}"
-    print('__________________________########################__________________________________')
-    print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
+    logging.info('__________________________########################__________________________________')
+    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
     schedule.every().day.at(next_random_time).do(main)
-    wait_until_next_execution(next_execution_time)
 
 schedule_main()
 
