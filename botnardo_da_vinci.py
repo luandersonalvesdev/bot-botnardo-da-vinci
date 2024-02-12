@@ -104,9 +104,9 @@ def generate_random_time():
 
 def schedule_main():
     next_random_time = generate_random_time()
-    date_now = datetime.now().strftime('%d/%m/%Y')
-    logging.info(f'__________________________ -> {date_now} 📅 <- __________________________________')
-    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑")
+    date_now = datetime.now()
+    logging.info(f'__________________________ 📅 {date_now} 📅 __________________________________')
+    logging.info(f"Horário agendado da próxima arte: {next_random_time.strftime('%d/%m/%Y')} UTC 🕑 - {date_now.strftime('%d/%m/%Y')} BR 🕑")
     schedule.every().day.at(next_random_time).do(main)
 
 def reschedule_all_jobs():
