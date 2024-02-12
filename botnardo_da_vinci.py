@@ -4,13 +4,16 @@ import tweepy
 from openai import OpenAI
 import requests
 import time
+import schedule
+import random
+from datetime import datetime
 
 def read_data_json():
     script_dir = os.path.dirname(__file__)
     json_path = os.path.join(script_dir, "keys.json")
     with open(json_path) as file:
         return json.load(file)
-    
+
 data = read_data_json()
 
 bearer_token = data["BEARER_TOKEN"]
@@ -34,52 +37,76 @@ auth = tweepy.OAuthHandler(api_key, api_key_secret)
 auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
-try:
+limit_credits_date = datetime(2024, 5, 10)
 
-    response = client_openia.chat.completions.create(
-        model="gpt-3.5-turbo-16k-0613",
-        messages=[
-            {
-                "role": "user",
-                "content": "I'm with an image AI and I have no idea what to create. Generate a completely random prompt for her to create. It can contain anything, such as animals, famous people, cars, well-known places, fruits, objects, life forms, etc. Literally anything. But don't exceed 150 characters."
-            }
-        ],
-        temperature=1,
-        max_tokens=256,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0
-    )
+def main():
+    days_left = (limit_credits_date - datetime.now()).days
 
-    prompt_text = response.choices[0].message.content
+    print("Botnardo Da Vinci começou a pintar 🖌️...")
+    try:
+        response = client_openia.chat.completions.create(
+            model="gpt-3.5-turbo-16k-0613",
+            messages=[
+                {
+                    "role": "user",
+                    "content": "You have at your disposal an AI that generates the image you want. Generate a completely random but very detailed prompt to create an image. It can contain anything, for example: animals, people, places, fruits, objects, life forms, etc. Literally anything. But do not exceed 230 characters."
+                }
+            ],
+            temperature=1,
+            max_tokens=256,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0
+        )
 
-    print(f"PROMPT AQUI: #{prompt_text}")
-    
-    image_response = client_openia.images.generate(
-        model="dall-e-2",
-        prompt=prompt_text,
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
+        prompt_text = response.choices[0].message.content
 
-    image_url = image_response.data[0].url
+        print(f"🤖 - Já tive minha ideia: {prompt_text}")
 
-    print(f"IMAGE URL AQUI: #{image_url}")
+        image_response = client_openia.images.generate(
+            model="dall-e-2",
+            prompt=prompt_text,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
 
-    image = requests.get(image_url)
-    
-    with open("image.png", "wb") as image_file:
-        image_file.write(image.content)
+        image_url = image_response.data[0].url
 
-    media_id = api.media_upload("image.png").media_id_string
+        print(f"🤖 - Pintura finalizada! Caso queira ver uma prévia está aqui: {image_url}")
 
-    tweet_text = f"30 dias me separam do meu derradeiro suspiro. Por tal motivo, nesta data, deixo ao mundo esta obra antes de me despedir. {prompt_text}"
+        image = requests.get(image_url)
 
-    tweet = client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
+        with open("image.png", "wb") as image_file:
+            image_file.write(image.content)
 
-    os.remove("image.png")
+        media_id = api.media_upload("image.png").media_id_string
 
-    print(tweet)
-except Exception as e:
-    print(e)
+        tweet_text = f"Restam {days_left}. Prompt: {prompt_text}"
+
+        if len(tweet_text) > 279:
+            tweet_text = f"Restam {days_left}. Prompt exedeu o limite de caracteres."
+
+        client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
+
+        os.remove("image.png")
+
+        print(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
+        print("_______________________________________________________________________________")
+    except Exception as e:
+        print(e)
+
+def generate_random_time():
+    return f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}"
+
+def schedule_main():
+    next_random_time = generate_random_time()
+    print('__________________________########################__________________________________')
+    print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
+    schedule.every().day.at(next_random_time).do(main)
+
+schedule_main()
+
+while True:
+    schedule.run_pending()
+    time.sleep(30)
