@@ -91,8 +91,6 @@ def main():
 
         os.remove("image.png")
 
-        client_twitter.create_tweet(text="🤖 - Próxima obra a ser pintada já está em andamento...")
-
         print(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
         print("_______________________________________________________________________________")
     except Exception as e:
@@ -115,17 +113,15 @@ def wait_until_next_execution(next_execution_time):
         time.sleep(wakeup_time)
 
 def schedule_main():
-    # next_random_time = generate_random_time()
-    # next_execution_time = f"{next_random_time[:2]}:{next_random_time[3:]}"
+    next_random_time = generate_random_time()
+    next_execution_time = f"{next_random_time[:2]}:{next_random_time[3:]}"
     print('__________________________########################__________________________________')
-    # print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
-    schedule.every(2).minutes.do(main)
-    print('EXECUTOU E SERÁ EXECUTADO A CADA 2 MINUTOS')
-    # wait_until_next_execution(next_execution_time)
+    print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
+    schedule.every().day.at(next_random_time).do(main)
+    wait_until_next_execution(next_execution_time)
 
 schedule_main()
 
 while True:
     schedule.run_pending()
     time.sleep(30)
-    print('Pensando... 💭')
