@@ -100,10 +100,10 @@ def generate_random_time():
     return f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}"
 
 def schedule_main():
-    next_random_time = generate_random_time()
+    # next_random_time = generate_random_time()
     print('__________________________########################__________________________________')
-    print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
-    schedule.every().day.at(next_random_time).do(main)
+    # print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
+    schedule.every(5).minutes.do(main)
 
 schedule_main()
 
