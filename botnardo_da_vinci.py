@@ -120,7 +120,7 @@ def schedule_main():
     print('__________________________########################__________________________________')
     # print(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
     schedule.every(2).minutes.do(main)
-
+    print('EXECUTOU E SERÁ EXECUTADO A CADA 2 MINUTOS')
     # wait_until_next_execution(next_execution_time)
 
 schedule_main()
