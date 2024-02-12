@@ -6,7 +6,7 @@ import requests
 import time
 import schedule
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 logging.basicConfig(filename='botnardo.log', level=logging.DEBUG)
@@ -41,6 +41,8 @@ auth.set_access_token(access_token, access_token_secret)
 api = tweepy.API(auth)
 
 limit_credits_date = datetime(2024, 5, 10)
+
+initial_date = datetime.now().strftime('%d/%m/%Y')
 
 def main():
     days_left = (limit_credits_date - datetime.now()).days
@@ -104,9 +106,10 @@ def generate_random_time():
 
 def schedule_main():
     next_random_time = generate_random_time()
-    next_execution_time = f"{next_random_time[:2]}:{next_random_time[3:]}"
+    tomorrow_day = (datetime.now() + timedelta(days=1)).strftime('%d/%m/%Y')
+    next_execution_date = initial_date if next_random_time > datetime.now().strftime('%H:%M') else tomorrow_day
     logging.info('__________________________########################__________________________________')
-    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {datetime.now().strftime('%d/%m/%Y')} 📅")
+    logging.info(f"Horário agendado da próxima arte: {next_random_time} 🕑 do dia {next_execution_date} 📅")
     schedule.every().day.at(next_random_time).do(main)
 
 schedule_main()
