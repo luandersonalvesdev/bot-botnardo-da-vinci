@@ -6,10 +6,15 @@ import requests
 import time
 import schedule
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
-logging.basicConfig(filename='botnardo.log', level=logging.DEBUG)
+logging.basicConfig(filename='bdebug_botnardo_da_vinci.log', level=logging.DEBUG)
+info_handler = logging.FileHandler('info_botnardo_da_vinci.log')
+info_handler.setLevel(logging.INFO)
+info_formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%d/%m/%Y %H:%M:%S')
+info_handler.setFormatter(info_formatter)
+logging.getLogger().addHandler(info_handler)
 
 def read_data_json():
     script_dir = os.path.dirname(__file__)
@@ -95,7 +100,6 @@ def main():
         os.remove("image.png")
 
         logging.info(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
-        logging.info("_______________________________________________________________________________")
     except Exception as e:
         logging.exception(e)
 
@@ -105,7 +109,7 @@ def generate_random_time():
 def schedule_main():
     next_random_time = generate_random_time()
     date_now = datetime.now().strftime('%d/%m/%Y')
-    logging.info(f'__________________________ 📅 {date_now} 📅 __________________________________')
+    logging.info(f'___________________________ 📅 {date_now} 📅 ___________________________________')
     logging.info(f"Horário agendado da próxima arte: {next_random_time} UTC 🕑")
     schedule.every().day.at(next_random_time).do(main)
 
