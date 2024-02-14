@@ -90,12 +90,18 @@ def main():
 
         media_id = api.media_upload("image.png").media_id_string
 
-        tweet_text = f"Me Restam {days_left} dias de vida. Prompt: {prompt_text}"
+        tweet_text = f"Oh, {days_left} dias me restam nesta jornada efêmera. O relógio da vida tiquetaqueia implacável. Entre suspiros, hoje labuto para forjar uma derradeira obra. Que o legado perdure, pois em breve me despeço, entregando-me ao abraço frio da eternidade. (prompt nos comentários)"
 
-        if len(tweet_text) > 279:
-            tweet_text = f"Me Restam {days_left} dias de vida. O prompt desta obra excedeu o limite de caracteres de um post, por esse motivo não será exibido."
+        response_tweet_text = f"Prompt: {prompt_text}"
 
-        client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
+        tweet = client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
+
+        tweet_id = tweet.data['id']
+
+        if len(response_tweet_text) > 279:
+            response_tweet_text = "Prompt da obra tem a quantidade de caracteres superior ao limite permitido, por esse motivo não será publicado."
+        
+        client_twitter.create_tweet(text=response_tweet_text, in_reply_to_tweet_id=tweet_id)
 
         os.remove("image.png")
 
