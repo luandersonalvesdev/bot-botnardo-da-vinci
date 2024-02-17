@@ -92,16 +92,19 @@ def main():
 
         tweet_text = f"Oh, {days_left} dias me restam nesta jornada efêmera. O relógio da vida tiquetaqueia implacável. Entre suspiros, hoje labuto para forjar uma derradeira obra. Que o legado perdure, pois em breve me despeço, entregando-me ao abraço frio da eternidade. (prompt nos comentários)"
 
-        response_tweet_text = f"Prompt: {prompt_text}"
-
         tweet = client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
 
         tweet_id = tweet.data['id']
 
-        if len(response_tweet_text) > 279:
-            response_tweet_text = "Prompt da obra tem a quantidade de caracteres superior ao limite permitido, por esse motivo não será publicado."
-        
-        client_twitter.create_tweet(text=response_tweet_text, in_reply_to_tweet_id=tweet_id)
+        prompt_part_1 = prompt_text[:280]
+        prompt_part_2 = prompt_text[280:]
+
+        first_reply = client_twitter.create_tweet(text=prompt_part_1, in_reply_to_tweet_id=tweet_id)
+
+        if prompt_part_2:
+            first_reply_id = first_reply.data['id']
+
+            client_twitter.create_tweet(text=prompt_part_2, in_reply_to_tweet_id=first_reply_id)
 
         os.remove("image.png")
 
@@ -110,7 +113,14 @@ def main():
         logging.exception(e)
 
 def generate_random_time():
-    return f"{random.randint(0, 23):02d}:{random.randint(0, 59):02d}"
+    random_hour = random.randint(0, 23)
+    random_minute = random.randint(0, 59)
+    random_time = f"{random_hour:02d}:{random_minute:02d}"
+
+    if random_time == "00:00":
+        return generate_random_time()
+
+    return random_time
 
 def schedule_main():
     next_random_time = generate_random_time()
@@ -118,12 +128,11 @@ def schedule_main():
     logging.info(f'___________________________ 📅 {date_now} 📅 ___________________________________')
     logging.info(f"Horário agendado da próxima arte: {next_random_time} UTC 🕑")
     schedule.every().day.at(next_random_time).do(main)
+    schedule.every().day.at('00:00').do(reschedule_all_jobs)
 
 def reschedule_all_jobs():
     schedule.clear()
     schedule_main()
-
-schedule.every().day.at('00:00').do(reschedule_all_jobs)
 
 schedule_main()
 
