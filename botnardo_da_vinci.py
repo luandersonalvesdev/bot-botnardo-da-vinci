@@ -139,7 +139,6 @@ def main():
     except Exception as e:
         logging.exception(e)
 
-main()
 def generate_random_time():
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)
