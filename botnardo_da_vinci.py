@@ -30,6 +30,8 @@ access_token_secret = data["ACCESS_TOKEN_SECRET"]
 api_key = data["API_KEY"]
 api_key_secret = data["API_KEY_SECRET"]
 open_ia_key = data["OPEN_IA_KEY"]
+insta_access_token = data["INSTA_ACCESS_TOKEN"]
+insta_user_id = data["INSTA_USER_ID"]
 
 client_twitter = tweepy.Client(
     bearer_token=bearer_token,
@@ -83,6 +85,31 @@ def main():
 
         logging.info(f"🤖 - Pintura finalizada! Caso queira ver uma prévia está aqui: {image_url}")
 
+        insta_text = f"Me restam {days_left} dias de vida.\nPrompt: {prompt_text}"
+
+        insta_url_container = f"https://graph.facebook.com/v19.0/{insta_user_id}/media"
+        insta_params_container = {
+            "image_url": image_url,
+            "caption": insta_text,
+            "access_token": insta_access_token
+        }
+        insta_response_json = requests.post(url=insta_url_container, params=insta_params_container)
+        insta_response_text = insta_response_json.text
+
+        insta_response = json.loads(insta_response_text)
+
+        insta_container_id = insta_response['id']
+
+        insta_url_post = f"https://graph.facebook.com/v19.0/{insta_user_id}/media_publish"
+        insta_params_post = {
+            "creation_id": insta_container_id,
+            "access_token": insta_access_token
+        }
+
+        requests.post(url=insta_url_post, params=insta_params_post)
+
+        logging.info(f"🤖 - Pintura publicada no instagram @botnardodavinci com sucesso!")
+
         image = requests.get(image_url)
 
         with open("image.png", "wb") as image_file:
@@ -108,10 +135,11 @@ def main():
 
         os.remove("image.png")
 
-        logging.info(f"🤖 - Pintura publicada com sucesso! Até amanhã.")
+        logging.info(f"🤖 - Pintura publicada no twitter @BotnardoDaVinci com sucesso! Até amanhã.")
     except Exception as e:
         logging.exception(e)
 
+main()
 def generate_random_time():
     random_hour = random.randint(0, 23)
     random_minute = random.randint(0, 59)

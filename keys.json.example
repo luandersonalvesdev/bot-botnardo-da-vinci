@@ -4,5 +4,9 @@
   "ACCESS_TOKEN_SECRET": "",
   "API_KEY": "",
   "API_KEY_SECRET": "",
+  "CLIENT_ID": "",
+  "CLIENT_SECRET": "",
   "OPEN_IA_KEY": "",
+  "INSTA_ACCESS_TOKEN": "",
+  "INSTA_USER_ID": ""
 }
