@@ -49,12 +49,8 @@ api = tweepy.API(auth)
 
 limit_credits_date = datetime(2024, 5, 10)
 
-def main():
-    days_left = (limit_credits_date - datetime.now()).days
-
-    logging.info("Botnardo Da Vinci começou a pintar 🖌️...")
-    try:
-        response = client_openia.chat.completions.create(
+def get_prompt_from_gpt():
+    response = client_openia.chat.completions.create(
             model="gpt-3.5-turbo-16k-0613",
             messages=[
                 {
@@ -68,12 +64,13 @@ def main():
             frequency_penalty=0,
             presence_penalty=0
         )
+    
+    prompt_text = response.choices[0].message.content
 
-        prompt_text = response.choices[0].message.content
+    return prompt_text
 
-        logging.info(f"🤖 - Já tive minha ideia: {prompt_text}")
-
-        image_response = client_openia.images.generate(
+def get_img_url_from_dalle(prompt_text):
+    image_response = client_openia.images.generate(
             model="dall-e-2",
             prompt=prompt_text,
             size="1024x1024",
@@ -81,32 +78,66 @@ def main():
             n=1,
         )
 
-        image_url = image_response.data[0].url
+    image_url = image_response.data[0].url
+
+    return image_url
+
+def post_on_instagram(days_left, prompt_text, image_url):
+    insta_text = f"Me restam {days_left} dias de vida.\nPrompt: {prompt_text}"
+
+    insta_url_container = f"https://graph.facebook.com/v19.0/{insta_user_id}/media"
+    insta_params_container = {
+        "image_url": image_url,
+        "caption": insta_text,
+        "access_token": insta_access_token
+    }
+    insta_response_json = requests.post(url=insta_url_container, params=insta_params_container)
+    insta_response_text = insta_response_json.text
+
+    insta_response = json.loads(insta_response_text)
+
+    insta_container_id = insta_response['id']
+
+    insta_url_post = f"https://graph.facebook.com/v19.0/{insta_user_id}/media_publish"
+    insta_params_post = {
+        "creation_id": insta_container_id,
+        "access_token": insta_access_token
+    }
+
+    requests.post(url=insta_url_post, params=insta_params_post)
+
+def post_on_twitter(days_left, media_id, prompt_text):
+    tweet_text = f"Oh, {days_left} dias me restam nesta jornada efêmera. O relógio da vida tiquetaqueia implacável. Entre suspiros, hoje labuto para forjar uma derradeira obra. Que o legado perdure, pois em breve me despeço, entregando-me ao abraço frio da eternidade. (prompt nos comentários)"
+
+    tweet = client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
+
+    tweet_id = tweet.data['id']
+
+    prompt_part_1 = prompt_text[:280]
+    prompt_part_2 = prompt_text[280:]
+
+    first_reply = client_twitter.create_tweet(text=prompt_part_1, in_reply_to_tweet_id=tweet_id)
+
+    if prompt_part_2:
+        first_reply_id = first_reply.data['id']
+
+        client_twitter.create_tweet(text=prompt_part_2, in_reply_to_tweet_id=first_reply_id)
+
+
+def main():
+    days_left = (limit_credits_date - datetime.now()).days
+
+    logging.info("Botnardo Da Vinci começou a pintar 🖌️...")
+    try:
+        prompt_text = get_prompt_from_gpt()
+
+        logging.info(f"🤖 - Já tive minha ideia: {prompt_text}")
+
+        image_url = get_img_url_from_dalle(prompt_text)
 
         logging.info(f"🤖 - Pintura finalizada! Caso queira ver uma prévia está aqui: {image_url}")
 
-        insta_text = f"Me restam {days_left} dias de vida.\nPrompt: {prompt_text}"
-
-        insta_url_container = f"https://graph.facebook.com/v19.0/{insta_user_id}/media"
-        insta_params_container = {
-            "image_url": image_url,
-            "caption": insta_text,
-            "access_token": insta_access_token
-        }
-        insta_response_json = requests.post(url=insta_url_container, params=insta_params_container)
-        insta_response_text = insta_response_json.text
-
-        insta_response = json.loads(insta_response_text)
-
-        insta_container_id = insta_response['id']
-
-        insta_url_post = f"https://graph.facebook.com/v19.0/{insta_user_id}/media_publish"
-        insta_params_post = {
-            "creation_id": insta_container_id,
-            "access_token": insta_access_token
-        }
-
-        requests.post(url=insta_url_post, params=insta_params_post)
+        post_on_instagram(days_left, prompt_text, image_url)
 
         logging.info(f"🤖 - Pintura publicada no instagram @botnardodavinci com sucesso!")
 
@@ -117,21 +148,7 @@ def main():
 
         media_id = api.media_upload("image.png").media_id_string
 
-        tweet_text = f"Oh, {days_left} dias me restam nesta jornada efêmera. O relógio da vida tiquetaqueia implacável. Entre suspiros, hoje labuto para forjar uma derradeira obra. Que o legado perdure, pois em breve me despeço, entregando-me ao abraço frio da eternidade. (prompt nos comentários)"
-
-        tweet = client_twitter.create_tweet(text=tweet_text, media_ids=[media_id])
-
-        tweet_id = tweet.data['id']
-
-        prompt_part_1 = prompt_text[:280]
-        prompt_part_2 = prompt_text[280:]
-
-        first_reply = client_twitter.create_tweet(text=prompt_part_1, in_reply_to_tweet_id=tweet_id)
-
-        if prompt_part_2:
-            first_reply_id = first_reply.data['id']
-
-            client_twitter.create_tweet(text=prompt_part_2, in_reply_to_tweet_id=first_reply_id)
+        post_on_twitter(days_left, media_id, prompt_text)
 
         os.remove("image.png")
 
